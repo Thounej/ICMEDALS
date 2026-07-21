@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Illan Cup Medals</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Barlow+Condensed:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg:#080a0f; --bg2:#0e1018; --bg3:#141720;
+      --border:#1a1e2e; --border2:#252a3f;
+      --text:#e4e8f5; --muted:#525878;
+      --accent:#f5a623; --accent2:#e8831a;
+      --success:#00c97a; --danger:#ff4466;
+      --fd:'Barlow Condensed',sans-serif;
+      --fu:'Rajdhani',sans-serif;
+      --fm:'JetBrains Mono',monospace;
+    }
+    *{box-sizing:border-box;margin:0;padding:0;}
+    body{background:var(--bg);color:var(--text);font-family:var(--fu);font-size:15px;min-height:100vh;}
+    body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(245,166,35,.004) 2px,rgba(245,166,35,.004) 4px);pointer-events:none;z-index:9999;}
+
+    header{background:linear-gradient(180deg,#0b0d15 0%,transparent 100%);border-bottom:1px solid var(--border);padding:0 2rem;display:flex;align-items:center;gap:1.5rem;height:66px;position:sticky;top:0;z-index:100;backdrop-filter:blur(14px);}
+    .emblem{width:38px;height:38px;background:linear-gradient(135deg,var(--accent),var(--accent2));clip-path:polygon(50% 0%,100% 25%,100% 75%,50% 100%,0% 75%,0% 25%);display:flex;align-items:center;justify-content:center;font-size:15px;color:var(--bg);font-weight:900;font-family:var(--fd);box-shadow:0 0 18px rgba(245,166,35,.35);}
+    .logo-title{font-family:var(--fd);font-size:1.45rem;font-weight:800;letter-spacing:.06em;text-transform:uppercase;}
+    .logo-title span{color:var(--accent);}
+    .logo-sub{font-family:var(--fm);font-size:.6rem;color:var(--muted);letter-spacing:.12em;text-transform:uppercase;}
+    nav{display:flex;margin-left:1.5rem;}
+    .tab{padding:0 1.25rem;height:66px;display:flex;align-items:center;font-family:var(--fd);font-size:.95rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;transition:all .15s;}
+    .tab:hover{color:var(--text);}
+    .tab.active{color:var(--accent);border-bottom-color:var(--accent);}
+    .hsp{flex:1;}
+    .sbadge{display:flex;align-items:center;gap:.5rem;font-family:var(--fm);font-size:.68rem;color:var(--muted);padding:.3rem .75rem;border:1px solid var(--border);border-radius:4px;background:var(--bg2);}
+    .sdot{width:6px;height:6px;border-radius:50%;background:var(--muted);}
+    .sdot.live{background:var(--success);box-shadow:0 0 8px var(--success);animation:pulse 2s infinite;}
+    @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+
+    .container{max-width:1440px;margin:0 auto;padding:2rem;}
+    .page{display:none;}
+
+    .sw{position:relative;flex:1;}
+    .sw svg{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--muted);pointer-events:none;}
+    input[type=text],input[type=search]{width:100%;background:var(--bg2);border:1px solid var(--border2);border-radius:6px;color:var(--text);font-family:var(--fu);font-size:15px;padding:.6rem 1rem .6rem 2.5rem;outline:none;transition:border-color .2s;}
+    input:focus{border-color:var(--accent);box-shadow:0 0 0 2px rgba(245,166,35,.12);}
+    input::placeholder{color:var(--muted);}
+    .btn{display:flex;align-items:center;gap:.4rem;padding:.6rem 1.1rem;border-radius:6px;border:1px solid var(--border2);background:var(--bg2);color:var(--text);font-family:var(--fd);font-size:.95rem;font-weight:700;letter-spacing:.04em;cursor:pointer;transition:all .15s;white-space:nowrap;}
+    .btn:hover{border-color:var(--accent);color:var(--accent);background:rgba(245,166,35,.06);}
+    .btn.primary{background:var(--accent);border-color:var(--accent);color:var(--bg);}
+    .btn.primary:hover{background:#f7b84a;}
+    .btn:disabled{opacity:.4;cursor:not-allowed;}
+
+    .acw{position:relative;flex:1;}
+    .acd{position:absolute;top:calc(100% + 4px);left:0;right:0;background:var(--bg2);border:1px solid var(--border2);border-radius:6px;overflow:hidden;z-index:200;box-shadow:0 8px 32px rgba(0,0,0,.6);display:none;}
+    .aci{padding:.6rem 1rem;cursor:pointer;display:flex;align-items:center;gap:.75rem;transition:background .1s;}
+    .aci:hover,.aci.foc{background:rgba(245,166,35,.08);}
+    .aci-name{font-weight:600;}
+    .aci-id{font-family:var(--fm);font-size:.66rem;color:var(--muted);}
+
+    .panel{background:var(--bg2);border:1px solid var(--border2);border-radius:8px;padding:1.25rem;margin-bottom:1.5rem;}
+    .ptitle{font-family:var(--fd);font-size:.82rem;font-weight:700;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;margin-bottom:.75rem;}
+    .prow{display:flex;gap:.75rem;align-items:center;}
+    .ptag{display:inline-flex;align-items:center;gap:.5rem;padding:.35rem .8rem;background:rgba(245,166,35,.12);border:1px solid rgba(245,166,35,.35);border-radius:4px;font-size:.85rem;font-weight:700;color:var(--accent);}
+    .ptag .rm{cursor:pointer;color:var(--muted);font-size:.8rem;}
+    .ptag .rm:hover{color:var(--danger);}
+
+    .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--border);border:1px solid var(--border);border-radius:8px;overflow:hidden;margin-bottom:1.5rem;}
+    .sc{background:var(--bg2);padding:1rem 1.2rem;}
+    .sl{font-family:var(--fm);font-size:.6rem;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;}
+    .sv{font-family:var(--fd);font-size:1.7rem;font-weight:800;line-height:1.1;}
+    .sv.at{color:var(--accent);}
+
+    .controls{display:grid;grid-template-columns:1fr auto;gap:1rem;margin-bottom:1.25rem;align-items:center;}
+    .chips{display:flex;gap:.5rem;flex-wrap:wrap;margin-bottom:1.5rem;align-items:center;}
+    .clabel{font-family:var(--fm);font-size:.7rem;color:var(--muted);}
+    .chip{padding:.28rem .8rem;border-radius:20px;border:1px solid var(--border2);background:var(--bg2);color:var(--muted);font-family:var(--fm);font-size:.7rem;cursor:pointer;transition:all .15s;}
+    .chip:hover,.chip.active{border-color:var(--accent);color:var(--accent);background:rgba(245,166,35,.08);}
+
+    .tw{background:var(--bg2);border:1px solid var(--border);border-radius:8px;overflow:hidden;}
+    table{width:100%;border-collapse:collapse;}
+    thead tr{background:var(--bg3);border-bottom:2px solid var(--border2);}
+    th{padding:.65rem 1rem;text-align:left;font-family:var(--fm);font-size:.66rem;font-weight:500;color:var(--muted);letter-spacing:.08em;text-transform:uppercase;user-select:none;cursor:pointer;white-space:nowrap;}
+    th:hover{color:var(--accent);}
+    th.sorted{color:var(--accent);}
+    tbody tr{border-bottom:1px solid var(--border);transition:background .1s;}
+    tbody tr:last-child{border-bottom:none;}
+    tbody tr:hover{background:rgba(255,255,255,.02);}
+    td{padding:.6rem 1rem;vertical-align:middle;}
+
+    .mthumb{width:52px;height:32px;border-radius:3px;object-fit:cover;display:block;}
+    .mph{width:52px;height:32px;border-radius:3px;background:var(--bg3);border:1px solid var(--border);}
+    .mname{font-weight:600;max-width:230px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+    .mname a{color:inherit;text-decoration:none;}
+    .mname a:hover{color:var(--accent);}
+    .pill{font-family:var(--fm);font-size:.64rem;color:var(--muted);background:var(--bg3);padding:1px 5px;border-radius:3px;border:1px solid var(--border);max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:inline-block;}
+    .tc{font-family:var(--fm);font-size:.76rem;color:var(--muted);white-space:nowrap;}
+    .at-badge{display:inline-flex;align-items:center;gap:.3rem;font-family:var(--fm);font-size:.7rem;font-weight:600;color:var(--accent);background:rgba(245,166,35,.12);border:1px solid rgba(245,166,35,.3);border-radius:3px;padding:1px 6px;}
+    .no-at{color:var(--muted);opacity:.3;font-family:var(--fm);font-size:.7rem;}
+
+    .lb-head{padding:.9rem 1.25rem;background:var(--bg3);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+    .lb-head-title{font-family:var(--fd);font-size:.9rem;font-weight:700;color:var(--muted);letter-spacing:.08em;text-transform:uppercase;}
+    .lb-st{font-family:var(--fm);font-size:.7rem;color:var(--muted);}
+    .rn{font-family:var(--fd);font-size:1.2rem;font-weight:800;color:var(--muted);text-align:center;width:50px;}
+    .rn.r1{color:#ffd700;}.rn.r2{color:#c0c8d8;}.rn.r3{color:#cd7f32;}
+    .lbn{font-weight:700;font-size:1rem;}
+    .pw{width:160px;height:6px;background:var(--border2);border-radius:3px;overflow:hidden;}
+    .pf{height:100%;background:linear-gradient(90deg,var(--accent),var(--accent2));border-radius:3px;transition:width .6s;}
+    .vb{font-family:var(--fm);font-size:.7rem;padding:.25rem .6rem;border-radius:4px;border:1px solid var(--border2);background:transparent;color:var(--muted);cursor:pointer;transition:all .15s;}
+    .vb:hover{border-color:var(--accent);color:var(--accent);}
+
+    .pag{display:flex;align-items:center;justify-content:space-between;padding:.85rem 1.25rem;border-top:1px solid var(--border);background:var(--bg3);}
+    .pi{font-family:var(--fm);font-size:.7rem;color:var(--muted);}
+    .pb-row{display:flex;gap:.35rem;}
+    .pb{padding:.26rem .58rem;border-radius:4px;border:1px solid var(--border2);background:var(--bg2);color:var(--muted);font-family:var(--fm);font-size:.7rem;cursor:pointer;transition:all .15s;}
+    .pb:hover:not(:disabled){border-color:var(--accent);color:var(--accent);}
+    .pb.active{border-color:var(--accent);color:var(--accent);background:rgba(245,166,35,.1);}
+    .pb:disabled{opacity:.3;cursor:not-allowed;}
+
+    .lscreen{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:55vh;gap:1.5rem;}
+    .spin{width:46px;height:46px;border:3px solid var(--border2);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite;}
+    @keyframes spin{to{transform:rotate(360deg);}}
+    .ltxt{font-family:var(--fd);font-size:1rem;color:var(--muted);letter-spacing:.1em;}
+    .erow td{text-align:center;padding:3rem;color:var(--muted);font-family:var(--fm);font-size:.8rem;}
+    .dl{display:inline-flex;align-items:center;gap:.3rem;font-family:var(--fm);font-size:.68rem;color:var(--muted);text-decoration:none;padding:2px 5px;border:1px solid var(--border);border-radius:3px;transition:all .15s;}
+    .dl:hover{color:var(--accent);border-color:var(--accent);}
+
+    @media(max-width:900px){.controls{grid-template-columns:1fr;}.hsm{display:none;}}
+  </style>
+</head>
+<body>
+
+<header>
+  <div style="display:flex;align-items:center;gap:.85rem">
+    <div class="emblem">IC</div>
+    <div>
+      <div class="logo-title">Illan Cup <span>Medals</span></div>
+      <div class="logo-sub">Author medal tracker</div>
+    </div>
+  </div>
+  <nav>
+    <div class="tab active" onclick="showPage('maps')">Maps</div>
+    <div class="tab" onclick="showPage('leaderboard')">Leaderboard</div>
+  </nav>
+  <div class="hsp"></div>
+  <div class="sbadge"><div class="sdot" id="sdot"></div><span id="stxt">connecting...</span></div>
+</header>
+
+<div class="container">
+  <div class="lscreen" id="ls">
+    <div class="spin"></div>
+    <div class="ltxt" id="ltxt">Loading Illan Cup maps...</div>
+  </div>
+
+  <!-- MAPS -->
+  <div id="mapsPage" class="page">
+    <div class="panel">
+      <div class="ptitle">Check a player's author medals</div>
+      <div class="prow">
+        <div class="acw">
+          <div class="sw">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <input type="text" id="playerInput" placeholder="Search by in-game name or paste Account ID..." autocomplete="off">
+          </div>
+          <div class="acd" id="playerAc"></div>
+        </div>
+        <button class="btn primary" id="loadBtn" onclick="loadPlayer()">Load</button>
+        <button class="btn" onclick="clearPlayer()">Clear</button>
+      </div>
+      <div id="ptags" style="margin-top:.75rem;display:flex;gap:.5rem;flex-wrap:wrap;align-items:center"></div>
+    </div>
+
+    <div class="stats">
+      <div class="sc"><div class="sl">Total Maps</div><div class="sv" id="sTotal">—</div></div>
+      <div class="sc"><div class="sl">Author Medals</div><div class="sv at" id="sAT">—</div></div>
+      <div class="sc"><div class="sl">Completion</div><div class="sv" id="sPct" style="color:var(--text)">—</div></div>
+    </div>
+
+    <div class="controls">
+      <div class="sw">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input type="search" id="mapSearch" placeholder="Search maps or authors..." oninput="applyFilters()">
+      </div>
+    </div>
+
+    <div class="chips">
+      <span class="clabel">Show:</span>
+      <div class="chip active" data-f="all" onclick="setF(this,'all')">All maps</div>
+      <div class="chip" data-f="at" onclick="setF(this,'at')"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--accent);margin-right:3px;vertical-align:middle"></span>Author medal</div>
+      <div class="chip" data-f="no" onclick="setF(this,'no')">No author medal</div>
+    </div>
+
+    <div class="tw">
+      <table>
+        <thead><tr>
+          <th style="width:60px"></th>
+          <th onclick="srt('name')" id="th-name" class="sorted">Map <span id="ar-name">▼</span></th>
+          <th onclick="srt('author')" id="th-author">Author <span id="ar-author">▲</span></th>
+          <th onclick="srt('at')" id="th-at" class="hsm">AT Time <span id="ar-at">▲</span></th>
+          <th id="th-got" style="display:none;width:80px">Got AT</th>
+          <th style="width:58px"></th>
+        </tr></thead>
+        <tbody id="mapsBody"></tbody>
+      </table>
+      <div class="pag"><div class="pi" id="minfo"></div><div class="pb-row" id="mbtns"></div></div>
+    </div>
+  </div>
+
+  <!-- LEADERBOARD -->
+  <div id="leaderboardPage" class="page">
+    <div class="tw">
+      <div class="lb-head">
+        <div class="lb-head-title">🏆 Author Medal Rankings — Top 100</div>
+        <div class="lb-st" id="lbSt">—</div>
+      </div>
+      <table>
+        <thead><tr>
+          <th style="width:60px;text-align:center">#</th>
+          <th>Player</th>
+          <th>Author Medals</th>
+          <th class="hsm">Progress</th>
+          <th style="width:90px"></th>
+        </tr></thead>
+        <tbody id="lbBody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── Config ────────────────────────────────────────────────────────────────────
+// Replace this with your Cloudflare Worker URL after deploying
+const WORKER = 'https://illancupmedals.kurrankuuselatony98.workers.dev';
+
+// ── State ─────────────────────────────────────────────────────────────────────
+let allMaps = [], filtered = [], totalMaps = 0;
+let activePlayer = null, playerATs = {};
+let showF = 'all', sortField = 'name', sortAsc = true, curPage = 1;
+const PAGE = 50;
+let lbData = [], acTimer = null, acFoc = -1;
+
+// ── Utils ─────────────────────────────────────────────────────────────────────
+function fmt(ms) { if(!ms)return'—'; const m=Math.floor(ms/60000),s=Math.floor((ms%60000)/1000),c=Math.floor((ms%1000)/10); return`${m>0?m+':':''}${m>0?String(s).padStart(2,'0'):s}.${String(c).padStart(2,'0')}`; }
+function isUUID(s) { return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test((s||'').trim()); }
+function setStatus(ok,t) { document.getElementById('sdot').className='sdot'+(ok?' live':''); document.getElementById('stxt').textContent=t; }
+const api = path => fetch(WORKER + path).then(r => r.json());
+
+// ── Pages ─────────────────────────────────────────────────────────────────────
+function showPage(n) {
+  document.querySelectorAll('.tab').forEach((t,i)=>t.classList.toggle('active',['maps','leaderboard'][i]===n));
+  document.getElementById('mapsPage').style.display      = n==='maps'        ?'block':'none';
+  document.getElementById('leaderboardPage').style.display = n==='leaderboard' ?'block':'none';
+  if (n==='leaderboard') loadLeaderboard();
+}
+
+// ── Load maps ─────────────────────────────────────────────────────────────────
+async function loadMaps() {
+  document.getElementById('ls').style.display = 'flex';
+  try {
+    const d = await api('/api/maps');
+    allMaps   = d.maps || [];
+    totalMaps = allMaps.length;
+    setStatus(true, `${totalMaps} maps`);
+    document.getElementById('sTotal').textContent = totalMaps;
+    applyFilters();
+    document.getElementById('ls').style.display   = 'none';
+    document.getElementById('mapsPage').style.display = 'block';
+  } catch(e) {
+    document.getElementById('ltxt').textContent = 'Failed to load: ' + e.message;
+    setStatus(false, 'error');
+  }
+}
+
+// ── Autocomplete ──────────────────────────────────────────────────────────────
+function setupAc(inpId, ddId, onSel) {
+  const inp = document.getElementById(inpId), dd = document.getElementById(ddId);
+  inp.addEventListener('input', () => {
+    clearTimeout(acTimer);
+    const v = inp.value.trim();
+    if (!v || isUUID(v)) { dd.style.display='none'; return; }
+    acTimer = setTimeout(async () => {
+      try {
+        const data = await api(`/api/search?q=${encodeURIComponent(v)}`);
+        if (!data?.length) { dd.style.display='none'; return; }
+        acFoc = -1;
+        dd.innerHTML = data.map(r => `<div class="aci" data-id="${r.accountId}" data-name="${r.name}"><span class="aci-name">${r.name}</span><span class="aci-id">${r.accountId.substring(0,18)}…</span></div>`).join('');
+        dd.querySelectorAll('.aci').forEach(el => el.addEventListener('click', () => { onSel(el.dataset.id, el.dataset.name); dd.style.display='none'; }));
+        dd.style.display = 'block';
+      } catch { dd.style.display='none'; }
+    }, 300);
+  });
+  inp.addEventListener('keydown', e => {
+    const it = dd.querySelectorAll('.aci');
+    if (e.key==='ArrowDown') { acFoc=Math.min(acFoc+1,it.length-1); it.forEach((el,i)=>el.classList.toggle('foc',i===acFoc)); e.preventDefault(); }
+    else if (e.key==='ArrowUp') { acFoc=Math.max(acFoc-1,0); it.forEach((el,i)=>el.classList.toggle('foc',i===acFoc)); e.preventDefault(); }
+    else if (e.key==='Enter' && acFoc>=0) { it[acFoc]?.click(); e.preventDefault(); }
+    else if (e.key==='Escape') dd.style.display='none';
+  });
+  document.addEventListener('click', e => { if (!e.target.closest('#'+ddId) && !e.target.closest('#'+inpId)) dd.style.display='none'; });
+}
+
+// ── Player: scan all maps for their ATs ───────────────────────────────────────
+// Since we can't store state server-side on CF Workers free tier without KV writes,
+// we scan directly from the browser — fetch top 100 of each map, check if player appears.
+async function loadPlayer(accountId, name) {
+  const inp = document.getElementById('playerInput');
+  if (!accountId) {
+    const v = inp.value.trim();
+    if (isUUID(v)) { accountId = v; }
+    else if (v) {
+      try {
+        const d = await api(`/api/search?q=${encodeURIComponent(v)}`);
+        if (d?.[0]) { accountId = d[0].accountId; name = d[0].name; }
+        else { setTag('No player found'); return; }
+      } catch { setTag('Search failed'); return; }
+    } else return;
+  }
+  inp.value = ''; document.getElementById('playerAc').style.display = 'none';
+  document.getElementById('loadBtn').disabled = true;
+
+  // Resolve name if not known
+  if (!name) {
+    const d = await api(`/api/resolvename?id=${accountId}`);
+    name = d.name || accountId;
+  }
+
+  activePlayer = { accountId, name };
+  playerATs = {};
+  document.getElementById('th-got').style.display = '';
+  setTag(`Scanning ${name}... (0/${totalMaps})`);
+
+  // Scan each map — fetch top 100 and look for the player
+  let found = 0;
+  for (let i = 0; i < allMaps.length; i++) {
+    const map = allMaps[i];
+    if (!map.seasonUid) continue;
+    try {
+      const data = await api(`/api/top100?seasonUid=${map.seasonUid}&mapUid=${map.uid}`);
+      const top  = data.tops?.[0]?.top || [];
+      for (const entry of top) {
+        if (entry.accountId === accountId && map.authorTime && entry.score <= map.authorTime) {
+          playerATs[map.uid] = true;
+          found++;
+          break;
+        }
+      }
+    } catch {}
+    if ((i + 1) % 50 === 0) setTag(`Scanning ${name}... (${i+1}/${totalMaps}, ${found} ATs found)`);
+  }
+
+  document.getElementById('loadBtn').disabled = false;
+  applyFilters();
+  renderTag();
+}
+
+function setTag(msg) { document.getElementById('ptags').innerHTML=`<span style="font-family:var(--fm);font-size:.76rem;color:var(--muted)">${msg}</span>`; }
+function renderTag() {
+  if (!activePlayer) return;
+  const c = Object.keys(playerATs).length, pct = totalMaps ? Math.round(c/totalMaps*100) : 0;
+  document.getElementById('ptags').innerHTML = `<div class="ptag">${activePlayer.name}<span class="rm" onclick="clearPlayer()">✕</span></div><span style="color:var(--accent);font-family:var(--fm);font-size:.78rem">🏆 ${c} ATs (${pct}%)</span>`;
+  document.getElementById('sAT').textContent  = c;
+  document.getElementById('sPct').textContent = pct + '%';
+}
+function clearPlayer() {
+  activePlayer=null; playerATs={};
+  document.getElementById('ptags').innerHTML='';
+  document.getElementById('th-got').style.display='none';
+  document.getElementById('sAT').textContent='—';
+  document.getElementById('sPct').textContent='—';
+  showF='all'; document.querySelectorAll('.chip[data-f]').forEach(c=>c.classList.toggle('active',c.dataset.f==='all'));
+  applyFilters();
+}
+
+// ── Map filter/sort/render ────────────────────────────────────────────────────
+function applyFilters() {
+  const q = document.getElementById('mapSearch').value.toLowerCase();
+  filtered = allMaps.filter(m => {
+    if (q && !m.name.toLowerCase().includes(q) && !(m.authorName||'').toLowerCase().includes(q)) return false;
+    if (showF==='at' && activePlayer && !playerATs[m.uid]) return false;
+    if (showF==='no' && activePlayer && playerATs[m.uid])  return false;
+    return true;
+  });
+  sortAndRender();
+}
+function sortAndRender() {
+  filtered.sort((a,b) => {
+    let va, vb;
+    if      (sortField==='name')   { va=a.name.toLowerCase();         vb=b.name.toLowerCase(); }
+    else if (sortField==='author') { va=(a.authorName||'').toLowerCase(); vb=(b.authorName||'').toLowerCase(); }
+    else if (sortField==='at')     { va=a.authorTime||Infinity;        vb=b.authorTime||Infinity; }
+    else if (sortField==='got')    { va=activePlayer?(playerATs[a.uid]?0:1):0; vb=activePlayer?(playerATs[b.uid]?0:1):0; }
+    else { va=vb=0; }
+    return va<vb?(sortAsc?-1:1):va>vb?(sortAsc?1:-1):0;
+  });
+  curPage=1; renderTable();
+}
+function srt(f) {
+  if (sortField===f) sortAsc=!sortAsc; else { sortField=f; sortAsc=true; }
+  document.querySelectorAll('th[id^="th-"]').forEach(t=>t.classList.remove('sorted'));
+  document.querySelectorAll('[id^="ar-"]').forEach(e=>e.textContent='▲');
+  const th=document.getElementById('th-'+f); if(th){th.classList.add('sorted');document.getElementById('ar-'+f).textContent=sortAsc?'▼':'▲';}
+  sortAndRender();
+}
+function setF(el,v) { showF=v; document.querySelectorAll('.chip[data-f]').forEach(c=>c.classList.toggle('active',c.dataset.f===v)); applyFilters(); }
+
+function renderTable() {
+  const start=(curPage-1)*PAGE, page=filtered.slice(start,start+PAGE);
+  const tbody=document.getElementById('mapsBody');
+  if (!page.length) { tbody.innerHTML='<tr class="erow"><td colspan="6">No maps match your filters.</td></tr>'; renderPag(); return; }
+  tbody.innerHTML = page.map(m => {
+    const hasAT = activePlayer ? !!playerATs[m.uid] : null;
+    const badge  = hasAT===null ? '' : hasAT
+      ? `<span class="at-badge"><svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>AT</span>`
+      : `<span class="no-at">—</span>`;
+    const tmio = `https://trackmania.io/#/leaderboard/${m.seasonUid}/${m.uid}`;
+    return `<tr>
+      <td>${m.thumbnailUrl ? `<img class="mthumb" src="${m.thumbnailUrl}" loading="lazy" alt="" onerror="this.style.display='none'">` : '<div class="mph"></div>'}</td>
+      <td><div class="mname"><a href="${tmio}" target="_blank">${m.name}</a></div></td>
+      <td style="font-weight:600">${m.authorName||'—'}</td>
+      <td class="tc hsm">${fmt(m.authorTime)}</td>
+      ${activePlayer ? `<td>${badge}</td>` : '<td></td>'}
+      <td>${m.fileUrl ? `<a class="dl" href="${m.fileUrl}" title="Download GBX"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>GBX</a>` : ''}</td>
+    </tr>`;
+  }).join('');
+  renderPag();
+}
+function renderPag() {
+  const total=filtered.length, tp=Math.ceil(total/PAGE)||1;
+  document.getElementById('minfo').textContent = total ? `${(curPage-1)*PAGE+1}–${Math.min(curPage*PAGE,total)} of ${total}` : 'No results';
+  const btns=document.getElementById('mbtns'); btns.innerHTML='';
+  const add=(l,p,d,a)=>{const b=document.createElement('button');b.className='pb'+(a?' active':'');b.textContent=l;b.disabled=d;b.onclick=()=>{curPage=p;renderTable();};btns.appendChild(b);};
+  add('‹',curPage-1,curPage===1,false);
+  let r=[]; for(let i=Math.max(1,curPage-2);i<=Math.min(tp,curPage+2);i++)r.push(i);
+  if(r[0]>1)add('1',1,false,false);
+  r.forEach(p=>add(p,p,false,p===curPage));
+  if(r[r.length-1]<tp)add(tp,tp,false,false);
+  add('›',curPage+1,curPage===tp,false);
+}
+
+// ── Leaderboard ───────────────────────────────────────────────────────────────
+async function loadLeaderboard() {
+  try {
+    const d = await api('/api/leaderboard');
+    lbData    = d.leaderboard || [];
+    totalMaps = d.totalMaps   || totalMaps;
+    const st  = document.getElementById('lbSt');
+    if (!lbData.length) {
+      st.textContent = '⏳ Not yet generated — see README';
+    } else {
+      const ago = d.updatedAt ? Math.round((Date.now()-d.updatedAt)/60000) + ' min ago' : '';
+      st.textContent = `${lbData.length} players · ${ago}`;
+    }
+    renderLB();
+  } catch(e) { document.getElementById('lbSt').textContent = 'Error: ' + e.message; }
+}
+
+function renderLB() {
+  const tbody = document.getElementById('lbBody');
+  if (!lbData.length) {
+    tbody.innerHTML = `<tr class="erow"><td colspan="5">
+      Leaderboard not yet generated.<br><br>
+      Run the seed script once: <code style="font-family:var(--fm);color:var(--accent)">node seed.js</code>
+    </td></tr>`;
+    return;
+  }
+  tbody.innerHTML = lbData.map(row => {
+    const pct = totalMaps ? Math.round(row.ats/totalMaps*100) : 0;
+    const rc  = row.rank===1?'r1':row.rank===2?'r2':row.rank===3?'r3':'';
+    return `<tr>
+      <td class="rn ${rc}">#${row.rank}</td>
+      <td class="lbn">${row.name}</td>
+      <td><span style="color:var(--accent);font-family:var(--fm);font-size:.95rem;font-weight:600">🏆 ${row.ats}</span> <span style="color:var(--muted);font-family:var(--fm);font-size:.75rem">/ ${totalMaps}</span></td>
+      <td class="hsm"><div style="display:flex;align-items:center;gap:.75rem"><div class="pw"><div class="pf" style="width:${pct}%"></div></div><span style="font-family:var(--fm);font-size:.7rem;color:var(--muted)">${pct}%</span></div></td>
+      <td><button class="vb" onclick="viewOnMaps('${row.accountId}','${row.name.replace(/'/g,"\\'")}')">View maps</button></td>
+    </tr>`;
+  }).join('');
+}
+
+async function viewOnMaps(accountId, name) {
+  showPage('maps');
+  await loadPlayer(accountId, name);
+}
+
+// ── Init ─────────────────────────────────────────────────────────────────────
+setupAc('playerInput','playerAc',(id,name)=>{ document.getElementById('playerInput').value=name; loadPlayer(id,name); });
+document.getElementById('playerInput').addEventListener('keydown',e=>{ if(e.key==='Enter'&&document.getElementById('playerAc').style.display!=='block')loadPlayer(); });
+loadMaps();
+</script>
+</body>
+</html>
