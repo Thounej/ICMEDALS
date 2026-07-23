@@ -1,0 +1,9 @@
+{
+  "name": "illan-cup-medals-seed",
+  "version": "1.0.0",
+  "scripts": { "seed": "node seed.js" },
+  "dependencies": {
+    "dotenv": "^16.3.1",
+    "node-fetch": "^2.7.0"
+  }
+}
