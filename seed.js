@@ -203,7 +203,32 @@ async function main() {
   // Deduplicate (same map can appear in multiple campaigns)
   const seen = new Set();
   const uniqueMaps = maps.filter(m => { if (seen.has(m.uid)) return false; seen.add(m.uid); return true; });
-  console.log(`  ${uniqueMaps.length} unique maps ready\n`);
+  console.log(`  ${uniqueMaps.length} unique maps ready`);
+
+  // Resolve author display names via trackmania.io (1.6s each, cached)
+  const uniqueAuthorIds = [...new Set(uniqueMaps.map(m => m.authorId).filter(Boolean))];
+  const authorNameCache = {};
+  console.log(`  Resolving ${uniqueAuthorIds.length} author names...`);
+  for (let i = 0; i < uniqueAuthorIds.length; i++) {
+    const id = uniqueAuthorIds[i];
+    try {
+      await new Promise(r => setTimeout(r, 1600));
+      const res = await fetch(`https://trackmania.io/api/player/${id}`, {
+        headers: { 'User-Agent': 'IllanCupMedals-Seed/1.0 contact@example.com' }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        const name = data?.displayname || data?.player?.name || id;
+        authorNameCache[id] = name;
+      }
+    } catch {}
+    if ((i + 1) % 10 === 0) process.stdout.write(`\r  Authors: ${i+1}/${uniqueAuthorIds.length}`);
+  }
+  console.log(`\n  ${Object.keys(authorNameCache).length} author names resolved`);
+  for (const map of uniqueMaps) {
+    map.authorName = authorNameCache[map.authorId] || map.authorId || 'Unknown';
+  }
+  console.log('');
 
   // ── Step 4: Scan leaderboards for AT holders ───────────────────────────────
   // KEY OPTIMIZATION: stop fetching pages once a score exceeds authorTime
@@ -279,6 +304,18 @@ async function main() {
   console.log(`  ${Object.keys(records).length} unique AT holders`);
   console.log(`  ${totalATRecords} total AT records`);
   console.log(`  Took ${((Date.now() - startTime) / 1000 / 60).toFixed(1)} minutes\n`);
+
+  // Count ATs per map and attach to map objects
+  const atCountByMap = {};
+  for (const pd of Object.values(records)) {
+    for (const uid of pd.maps) {
+      atCountByMap[uid] = (atCountByMap[uid] || 0) + 1;
+    }
+  }
+  for (const map of uniqueMaps) {
+    map.atCount = atCountByMap[map.uid] || 0;
+  }
+  console.log(`  AT counts attached to maps (${Object.keys(atCountByMap).length} maps have at least 1 AT)`);
 
   // ── Step 5: Save raw records to file ──────────────────────────────────────
   fs.writeFileSync('records.json', JSON.stringify(records, null, 2));
