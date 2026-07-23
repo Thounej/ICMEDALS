@@ -1,0 +1,33 @@
+name: Seed Leaderboard
+
+on:
+  schedule:
+    - cron: '0 22 * * *'  # Joka päivä klo 22:00 UTC = 01:00 Suomen aikaa (UTC+3)
+  workflow_dispatch:       # Voit myös ajaa käsin GitHubista
+
+jobs:
+  seed:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120   # Max 2h, seed kestää ~30-60min
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Run seed script
+        run: node seed.js
+        env:
+          TM_SERVICE_LOGIN: ${{ secrets.TM_SERVICE_LOGIN }}
+          TM_SERVICE_PASSWORD: ${{ secrets.TM_SERVICE_PASSWORD }}
+          CLUB_ID: ${{ secrets.CLUB_ID }}
+          CF_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
+          CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
+          CF_KV_NAMESPACE_ID: ${{ secrets.CF_KV_NAMESPACE_ID }}
