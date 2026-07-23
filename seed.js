@@ -137,32 +137,40 @@ async function main() {
   for (let i = 0; i < uniqueMapUids.length; i += 100) {
     const chunk = uniqueMapUids.slice(i, i + 100);
     try {
-      // Live API map info endpoint
-      const token = await liveToken();
-      const res   = await fetch(
-        `https://live-services.trackmania.nadeo.live/api/token/map/?mapUidList=${chunk.join(',')}`,
-        { headers: { 'Authorization': `nadeo_v1 t=${token}`, 'User-Agent': 'IllanCupMedals-Seed/1.0' } }
-      );
-      if (res.ok) {
-        const data = await res.json();
-        const list = Array.isArray(data) ? data : (data.mapList || []);
-        for (const m of list) mapInfoById[m.mapUid] = m;
+      // Core API is confirmed to return correct map data
+      // Fields: mapUid, name, author, authorScore, goldScore, silverScore, bronzeScore, thumbnailUrl, fileUrl
+      const ct = await coreToken();
+      if (ct) {
+        const res = await fetch(
+          `https://prod.trackmania.core.nadeo.online/maps/?mapUidList=${chunk.join(',')}`,
+          { headers: { 'Authorization': `nadeo_v1 t=${ct}`, 'User-Agent': 'IllanCupMedals-Seed/1.0' } }
+        );
+        if (res.ok) {
+          const data = await res.json();
+          if (Array.isArray(data)) for (const m of data) mapInfoById[m.mapUid] = m;
+          else console.warn(`  Unexpected map info shape:`, JSON.stringify(data).substring(0, 100));
+        } else {
+          console.warn(`  Core API ${res.status}: ${await res.text()}`);
+        }
       } else {
-        // Fallback to Core API
-        const ct = await coreToken();
-        if (ct) {
-          const res2 = await fetch(
-            `https://prod.trackmania.core.nadeo.online/maps/?mapUidList=${chunk.join(',')}`,
-            { headers: { 'Authorization': `nadeo_v1 t=${ct}`, 'User-Agent': 'IllanCupMedals-Seed/1.0' } }
-          );
-          if (res2.ok) {
-            const data2 = await res2.json();
-            if (Array.isArray(data2)) for (const m of data2) mapInfoById[m.mapUid] = m;
-          }
+        // Core API unavailable — try Live API
+        const token = await liveToken();
+        const res = await fetch(
+          `https://live-services.trackmania.nadeo.live/api/token/map?mapUidList=${chunk.join(',')}`,
+          { headers: { 'Authorization': `nadeo_v1 t=${token}`, 'User-Agent': 'IllanCupMedals-Seed/1.0' } }
+        );
+        if (res.ok) {
+          const raw = await res.text();
+          if (chunk.indexOf(0) === 0) console.log('  Live map info sample:', raw.substring(0, 200));
+          const data = JSON.parse(raw);
+          const list = Array.isArray(data) ? data : (data.mapList || []);
+          for (const m of list) mapInfoById[m.mapUid || m.uid] = m;
         }
       }
     } catch (e) { console.warn(`  Map info chunk ${i}: ${e.message}`); }
-    if ((i / 100 + 1) % 5 === 0) console.log(`  ${Math.min(i + 100, uniqueMapUids.length)}/${uniqueMapUids.length} maps`);
+    const resolved = Object.keys(mapInfoById).length;
+    if (i === 0) console.log(`  First chunk: got ${resolved} map infos`);
+    if ((i / 100 + 1) % 5 === 0) console.log(`  ${Math.min(i + 100, uniqueMapUids.length)}/${uniqueMapUids.length} maps — ${resolved} with info`);
   }
   console.log(`  Got info for ${Object.keys(mapInfoById).length} maps`);
 
@@ -172,6 +180,8 @@ async function main() {
     for (const uid of camp.mapUids) {
       const info = mapInfoById[uid] || {};
       // Field names differ between Live and Core API — handle both
+      // Core API confirmed field names: authorScore, goldScore, silverScore, bronzeScore
+      // 'author' field is the authorAccountId
       const authorTime = info.authorScore || info.authorTime || null;
       const name       = strip(info.name || uid);
       const authorId   = info.author || info.authorAccountId || null;
